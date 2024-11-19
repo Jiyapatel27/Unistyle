@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unistyle - Cart</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="icon" href="image/u1.png">
+    <style>
+        /* Modal styles */
+        .rating-modal, #payment-options-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            width: 300px;
+        }
+
+        .modal-content button {
+            margin: 10px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        #payment-options-modal .modal-content button {
+            border-radius: 5px;
+            background-color: rgb(35, 35, 135);
+            color: white;
+        }
+
+        .cart-container, .total, .payment-options {
+            max-width: 600px;
+            margin: auto;
+            padding: 20px;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <section id="header">
+        <a href="#"><img src="image/logo.png" class="logo" alt="logo" width="150" height="70"></a>
+        <div>
+            <ul id="navbar">
+                <li><a href="index.html">HOME</a></li>
+                <li><a href="shop.html">SHOP</a></li>
+                <li><a href="about.html">ABOUT</a></li>
+                <li><a href="contact.html">CONTACT</a></li>
+                <li id="lg-bag"><a class="active" href="cart.html"><i class="fa fa-shopping-bag"></i></a></li>
+            </ul>
+        </div>
+    </section>
+
+    <section id="cart" class="section-p1">
+        <table width="100%">
+            <thead>
+                <tr>
+                    <td>Remove</td>
+                    <td>Image</td>
+                    <td>Product</td>
+                    <td>Price</td>
+                    <td>Quantity</td>
+                    <td>Subtotal</td>
+                </tr>
+            </thead>
+            <tbody id="cart-items">
+                <!-- Cart items will be inserted here dynamically -->
+            </tbody>
+        </table>
+    </section>
+
+    <section id="cart-add" class="section-p1">
+        <div id="subtotal">
+            <h3>Cart Totals</h3>
+            <table>
+                <tr>
+                    <td>Cart Subtotal</td>
+                    <td id="cart-subtotal">₹0</td>
+                </tr>
+                <tr>
+                    <td>Shipping</td>
+                    <td>Free</td>
+                </tr>
+                <tr>
+                    <td><strong>Total</strong></td>
+                    <td><strong id="cart-total">₹0</strong></td>
+                </tr>
+            </table>
+            <button class="normal" onclick="showPaymentOptions()">Proceed to Payment</button> 
+        </div>
+    </section>
+
+    <!-- Payment Options Modal -->
+    <div id="payment-options-modal" class="rating-modal">
+        <div class="modal-content">
+            <h3>Select Payment Method</h3>
+            <button onclick="openPaymentPage('UPI')">UPI</button>
+            <button onclick="openPaymentPage('Card')">Card</button>
+            <button onclick="openPaymentPage('COD')">Cash on Delivery</button>
+            <button onclick="closePaymentOptions()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        function showPaymentOptions() {
+            document.getElementById('payment-options-modal').style.display = 'flex';
+        }
+
+        function closePaymentOptions() {
+            document.getElementById('payment-options-modal').style.display = 'none';
+        }
+
+        function openPaymentPage(method) {
+            localStorage.setItem('selectedPaymentMethod', method);
+            const totalAmount = document.getElementById('cart-total').innerText.replace('₹', '');
+            localStorage.setItem('cartTotalAmount', totalAmount); // Save total to localStorage
+            window.location.href = "payment.html";
+        }
+
+        function loadCartItems() {
+            const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+            const cartItemsContainer = document.getElementById('cart-items');
+            let subtotal = 0;
+
+            if (cartItems.length === 0) {
+                cartItemsContainer.innerHTML = '<tr><td colspan="6" style="text-align: center;">Your cart is empty.</td></tr>';
+            } else {
+                cartItems.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td><button onclick="removeCartItem('${item.name}')">Remove</button></td>
+                        <td><img src="${item.image}" alt="Product Image" width="50"></td>
+                        <td>${item.name}</td>
+                        <td>₹${item.price}</td>
+                        <td><input type="number" value="${item.quantity}" min="1" onchange="updateCartItem('${item.name}', this.value)"></td>
+                        <td>₹${item.price * item.quantity}</td>
+                    `;
+                    cartItemsContainer.appendChild(row);
+                    subtotal += item.price * item.quantity;
+                });
+            }
+
+            document.getElementById('cart-subtotal').innerText = `₹${subtotal}`;
+            document.getElementById('cart-total').innerText = `₹${subtotal}`;
+        }
+
+        function updateCartItem(name, newQuantity) {
+            let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+            const item = cartItems.find(item => item.name === name);
+            if (item) {
+                item.quantity = parseInt(newQuantity);
+                localStorage.setItem('cartItems', JSON.stringify(cartItems));
+                loadCartItems();
+            }
+        }
+
+        function removeCartItem(name) {
+            let cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+            cartItems = cartItems.filter(item => item.name !== name);
+            localStorage.setItem('cartItems', JSON.stringify(cartItems));
+            loadCartItems();
+        }
+
+        window.onload = loadCartItems;
+    </script>
+</body>
+</html>
